@@ -1,0 +1,403 @@
+Ansible setup :
+
+REquirement :
+
+Ansible server:
+ => Ansible package.
+ => Ansible configuration.
+ => Inventory.
+ => Ansible user / Remote user
+ => SSH
+
+Client Configuration:
+
+ => Python.
+ => SSH
+
+
+Installation :
+
+ down load the epel Repository from the Internet.
+  
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+yum install epel-release-latest-7.noarch.rpm
+yum install ansible -y
+
+ 
+Configuration :
+
+ Anible user 
+ sudo privileges
+ ssh connectivity
+
+
+On the server side:
+
+ Generate SSH keys usiong the below command\
+
+   => ssh-keygen -t rsa
+   
+  Copy the public key to the clients 
+
+   => ssh-copy-id  client
+
+Once the above steps done successafully.
+the below command should command should work without password.
+
+  ssh client date
+
+
+DNS :
+/etc/hosts
+
+
+Configuration file hirarchy:
+
+ 1. Local directory / homedirectory
+ 
+  ansible.cfg
+
+ 2. Default file 
+
+  /etc/ansible/ansible.cfg
+
+
+Basic Command 
+
+ansible <hostname pattern> -a <commands>
+
+Inventory is confurued
+
+
+Inventory:
+
+Default inventory path
+
+/etc/ansible/hosts
+
+Hosts/clients definition:
+
+1. Standard configuration
+
+   ip or hostanames 
+
+ EX :  cleint1
+	client2
+  or 
+ IP1
+ IP2
+
+2. Goruping the servers as per the env.
+
+ 
+[ Prod ]
+
+ client1
+
+[ dev ]
+ 
+client2
+
+[ web ]
+
+webserver
+
+========================
+
+modules - resumbles resources in puppet
+
+ansible-doc -l ==> modules
+
+ansible-doc <module name>
+
+===============================
+
+Ansible User setup:
+
+1. Create user on the clients.
+
+ useradd ansuser
+
+2. Enable sudo 
+
+  visudo /etc/sudoers
+
+  ansuser  ALL  NOPASSWORD: ALL
+  
+
+  
+
+
+3. Verify the connectivity.
+
+	ssh ansuser@client
+
+
+4. Run the ansible command
+
+============================
+
+Anisble playbook
+============================
+
+Command = ansible-playbook
+
+Language = yaml ( yet another language or Yet another markup language)
+
+File name  = Extension with .yml
+
+Plabook Contents:
+
+---
+- Host definition1
+  REmote users1
+  Connectivity
+  tasks:
+    - name: To install apache package.
+      yum: name=openssh state=latest
+
+    - name: To restart the service. 
+      service: name=sshd state=started enable=true
+
+- Host definition2
+  REmote users2
+  Connectivity
+  tasks: 
+    - name: To user 
+      user: name=user1 uid=2050
+
+To run the playbook
+
+ -> To validate the syntax
+
+ansible-playbook --syntax-check
+syntax check -ok
+
+ansible-book <name>.yml
+
+
+[ansuser@ip-172-31-22-114 ~]$ cat firstplay.yml
+---
+- hosts: all
+  remote_user: ansuser
+  #become: true
+  #sudo: yes
+  tasks:
+   - name: To install apache.
+     yum: name=httpd state=latest
+   - name: To start the service.
+     service: name=httpd state=started enabled=yes
+   - name: to create user
+     user: name=user1 uid=2050
+[ansuser@ip-172-31-22-114 ~]
+
+
+ ansible host -a "id"
+
+ ansible host -m command -a "ping"
+
+====================================
+- hosts: all
+  vars:
+    hello: [Asia, Americas, Artic, Antartic ,Oceania,Europe,Africa]
+  tasks:
+  - name: Ansible array variables example
+    debug: 
+      msg: "{{ item }}"
+    with_items:
+      - "{{ hello }}"
+
+
+
+- hosts: all
+  vars:
+    python:
+      Designer: 'Guido van Rosum'
+      Developer: 'Python Software Foundation'
+      OS: 'Cross-platform'
+  tasks:
+  - name: Ansible Dictionary Example
+    debug:
+      msg: "{{ python }}"
+
+
+
+
+- hosts: all
+  vars:
+    hello:
+      - World
+      - Asia
+      - South America
+      - North America
+      - Artic
+      - Antartic
+      - Oceania
+      - Europe
+      - Africa
+  tasks:
+  - name: Ansible List variable Example
+    debug:
+      msg: "{{ hello[2] }}"
+
+- hosts: all
+  vars:
+    hello: [Asia, Americas, Artic, Antartic ,Oceania,Europe,Africa]
+  tasks:
+  - name: Ansible array variables example
+    debug: 
+      msg: "{{ item }}"
+    with_items:
+      - "{{ hello }}"
+
+
+
+- hosts: all
+  vars:
+    python:
+      Designer: 'Guido van Rosum'
+      Developer: 'Python Software Foundation'
+      OS: 'Cross-platform'
+  tasks:
+  - name: Ansible Dictionary Example
+    debug:
+      msg: "{{ python }}"
+
+
+
+
+- hosts: all
+  vars:
+    hello:
+      - World
+      - Asia
+      - South America
+      - North America
+      - Artic
+      - Antartic
+      - Oceania
+      - Europe
+      - Africa
+  tasks:
+  - name: Ansible List variable Example
+    debug:
+      msg: "{{ hello[2] }}"
+=========================================
+
+
+
+To call the variable in the playbook itself
+
+Key word:
+ 
+vars: ==>
+  <variable name>:
+   - list 
+   -
+yum: name= {{ item/variable }}
+
+To declare the varaibles in a file and call into the playbook.
+
+vars_files:
+  - <file path>
+
+
+Task handling:
+
+
+
+==> Change configuration setting on the running s/w
+  => Add one line into the index.html
+ => notify => to the task, if something changed in this area.
+  = > notify: service restart
+
+
+==> restart the service
+handlers:
+ - name: service restart 
+   service: name=httpd state=restarted
+
+
+Tags:
+
+ => To call a specific task from the play book.
+ taks.yml
+ name: task1
+ name: task2
+ name: task3
+
+ ansible-palybook task.yml
+
+ => excutes all the tasks.
+
+ taks.yml
+ name: task1
+ tags: one
+ name: task2
+ tags: two
+ name: task3
+ tags: three
+
+ansible-playbook --tags one taks.yml
+
+
+tasks:
+      - name: "append all items"
+      lineinfile:
+          dest: "test.txt"
+          line: '-e {{ item }} \'
+      with_items: "{{ items_list }}"
+
+      - name: "append all items"
+      lineinfile:
+          dest: "test.txt"
+          line: '-e {{ item }} \'
+      with_items: "{{ items_list }}"
+
+
+devops@devops:~/ANSIBLE$ more test.txt
+-e ! \
+
+tasks:
+      - name: "append all items"
+      lineinfile:
+          dest: "test.txt"
+          line: '-e {{ item }} \'
+      with_items: "{{ items_list }}"
+
+      - name: "append all items"
+      lineinfile:
+          dest: "test.txt"
+          line: '-e {{ item }} \'
+      with_items: "{{ items_list }}"
+
+
+devops@devops:~/ANSIBLE$ more test.txt
+-e ! \
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
